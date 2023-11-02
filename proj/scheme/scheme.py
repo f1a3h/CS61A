@@ -39,7 +39,7 @@ def scheme_eval(expr, env, _=None): # Optional third argument is ignored
         procedure = scheme_eval(first, env)
         validate_procedure(procedure)
         args = rest.map(lambda x: scheme_eval(x, env))
-        return procedure.apply(args, env)
+        return scheme_apply(procedure, args, env)
         # END PROBLEM 4
 
 def self_evaluating(expr):
@@ -72,7 +72,12 @@ def eval_all(expressions, env):
     2
     """
     # BEGIN PROBLEM 7
-    return scheme_eval(expressions.first, env) # change this line
+    if expressions is nil: return None
+    expr = expressions
+    while expr is not nil:
+        val = scheme_eval(expr.first, env)
+        expr = expr.rest
+    return val
     # END PROBLEM 7
 
 ################
@@ -123,6 +128,14 @@ class Frame(object):
         """
         # BEGIN PROBLEM 10
         "*** YOUR CODE HERE ***"
+        if len(formals) != len(vals):
+            raise SchemeError("number of formals does not match with number of vals.")
+        child = Frame(self)
+        formal, val = formals, vals
+        while formal is not nil:
+            child.define(formal.first, val.first)
+            formal, val = formal.rest, val.rest
+        return child
         # END PROBLEM 10
 
 ##############
@@ -190,6 +203,8 @@ class LambdaProcedure(Procedure):
         of values, for a lexically-scoped call evaluated in my parent environment."""
         # BEGIN PROBLEM 11
         "*** YOUR CODE HERE ***"
+        parent, formals = self.env, self.formals
+        return parent.make_child_frame(formals, args)
         # END PROBLEM 11
 
     def __str__(self):
@@ -249,7 +264,6 @@ def do_define_form(expressions, env):
         validate_form(expressions, 2, 2) # Checks that expressions is a list of length exactly 2
         # BEGIN PROBLEM 5
         "*** YOUR CODE HERE ***"
-        print("DEBUG:", expressions.rest)
         val = scheme_eval(expressions.rest.first, env)
         env.define(target, val)
         return target
@@ -257,6 +271,12 @@ def do_define_form(expressions, env):
     elif isinstance(target, Pair) and scheme_symbolp(target.first):
         # BEGIN PROBLEM 9
         "*** YOUR CODE HERE ***"
+        symbol = target.first
+        formals, body = target.rest, expressions.rest
+        validate_formals(formals)
+        procedure = LambdaProcedure(formals, body, env)
+        env.define(symbol, procedure)
+        return symbol
         # END PROBLEM 9
     else:
         bad_target = target.first if isinstance(target, Pair) else target
@@ -272,6 +292,7 @@ def do_quote_form(expressions, env):
     validate_form(expressions, 1, 1)
     # BEGIN PROBLEM 6
     "*** YOUR CODE HERE ***"
+    return expressions.first
     # END PROBLEM 6
 
 def do_begin_form(expressions, env):
@@ -298,6 +319,8 @@ def do_lambda_form(expressions, env):
     validate_formals(formals)
     # BEGIN PROBLEM 8
     "*** YOUR CODE HERE ***"
+    body = expressions.rest
+    return LambdaProcedure(formals, body, env)
     # END PROBLEM 8
 
 def do_if_form(expressions, env):
