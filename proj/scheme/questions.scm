@@ -6,16 +6,27 @@
 ; Some utility functions that you may find useful to implement.
 
 (define (cons-all first rests)
-  'replace-this-line)
+  (map (lambda (s) (append (list first) s)) rests))
 
 (define (zip pairs)
-  'replace-this-line)
+  (define (helper first second pairs)
+    (if (null? pairs)
+      (list first second)
+      (helper (append first (list (caar pairs))) (append second (list (car (cdar pairs)))) (cdr pairs))))
+  (helper nil nil pairs))
 
 ;; Problem 16
 ;; Returns a list of two-element lists
 (define (enumerate s)
   ; BEGIN PROBLEM 16
-  'replace-this-line
+  (define (helper idx s)
+    (if (null? s)
+      nil
+      (cons (list idx (car s)) (helper (+ idx 1) (cdr s)))))
+
+  (if (null? s)
+    nil
+    (helper 0 s))
   )
   ; END PROBLEM 16
 
@@ -23,7 +34,15 @@
 ;; List all ways to make change for TOTAL with DENOMS
 (define (list-change total denoms)
   ; BEGIN PROBLEM 17
-  'replace-this-line
+  (if (null? denoms)
+    nil
+    (if (>= total (car denoms))
+      (append (cons-all (car denoms)
+          (list-change (- total (car denoms)) denoms))
+        (list-change total (cdr denoms)))
+      (if (= total 0)
+        (list nil)
+        (list-change total (cdr denoms)))))
   )
   ; END PROBLEM 17
 
@@ -41,12 +60,12 @@
 (define (let-to-lambda expr)
   (cond ((atom? expr)
          ; BEGIN PROBLEM 18
-         'replace-this-line
+         expr
          ; END PROBLEM 18
          )
         ((quoted? expr)
          ; BEGIN PROBLEM 18
-         'replace-this-line
+         expr
          ; END PROBLEM 18
          )
         ((or (lambda? expr)
@@ -55,18 +74,20 @@
                (params (cadr expr))
                (body   (cddr expr)))
            ; BEGIN PROBLEM 18
-           'replace-this-line
+           (cons form (cons params (let-to-lambda body)) )
            ; END PROBLEM 18
            ))
         ((let? expr)
          (let ((values (cadr expr))
                (body   (cddr expr)))
            ; BEGIN PROBLEM 18
-           'replace-this-line
+           (define args (car (zip values)))
+           (define vals (cadr (zip values)))
+           (cons (cons 'lambda (cons args (map let-to-lambda body))) (map let-to-lambda vals))
            ; END PROBLEM 18
            ))
         (else
          ; BEGIN PROBLEM 18
-         'replace-this-line
+         (cons (car expr) (map let-to-lambda (cdr expr)))
          ; END PROBLEM 18
          )))
