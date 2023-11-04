@@ -353,6 +353,12 @@ def do_and_form(expressions, env):
     """
     # BEGIN PROBLEM 12
     "*** YOUR CODE HERE ***"
+    expr = expressions
+    if expr is nil: return True
+    while expr is not nil:
+        val, expr = scheme_eval(expr.first, env), expr.rest
+        if is_false_primitive(val): return False
+    return val
     # END PROBLEM 12
 
 def do_or_form(expressions, env):
@@ -370,6 +376,12 @@ def do_or_form(expressions, env):
     """
     # BEGIN PROBLEM 12
     "*** YOUR CODE HERE ***"
+    expr = expressions
+    if expr is nil: return False
+    while expr is not nil:
+        val, expr = scheme_eval(expr.first, env), expr.rest
+        if is_true_primitive(val): return val
+    return False
     # END PROBLEM 12
 
 def do_cond_form(expressions, env):
@@ -390,6 +402,9 @@ def do_cond_form(expressions, env):
         if is_true_primitive(test):
             # BEGIN PROBLEM 13
             "*** YOUR CODE HERE ***"
+            expr = clause.rest
+            if expr is nil: return test
+            return eval_all(expr, env)
             # END PROBLEM 13
         expressions = expressions.rest
 
@@ -414,6 +429,13 @@ def make_let_frame(bindings, env):
     names, values = nil, nil
     # BEGIN PROBLEM 14
     "*** YOUR CODE HERE ***"
+    tmp = bindings
+    while tmp is not nil:
+        binding = tmp.first
+        validate_form(binding, 2, 2)
+        names, values = Pair(binding.first, names), Pair(eval_all(binding.rest, env), values)
+        tmp = tmp.rest
+    validate_formals(names)
     # END PROBLEM 14
     return env.make_child_frame(names, values)
 
@@ -540,6 +562,9 @@ class MuProcedure(Procedure):
 
     # BEGIN PROBLEM 15
     "*** YOUR CODE HERE ***"
+    def make_call_frame(self, args, env):
+        parent, formals = env, self.formals
+        return parent.make_child_frame(formals, args)
     # END PROBLEM 15
 
     def __str__(self):
@@ -556,6 +581,8 @@ def do_mu_form(expressions, env):
     validate_formals(formals)
     # BEGIN PROBLEM 18
     "*** YOUR CODE HERE ***"
+    body = expressions.rest
+    return MuProcedure(formals, body)
     # END PROBLEM 18
 
 SPECIAL_FORMS['mu'] = do_mu_form
